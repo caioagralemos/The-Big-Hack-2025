@@ -1,0 +1,11 @@
+WhatsApp Follow-ups (auto-generated from doubts)
+Trigger a question when: low confidence, missing timestamps, unclear impact, identity mismatch. Examples:
+
+Gaps/Timeline: “We noticed a break between 05/2023–09/2023. Was this study, travel, or another role? One sentence?”
+Impact Clarification: “On Project X you mention performance improvements. Roughly what metric changed and by how much?”
+Authorship: “Can you confirm your role in Repo Y (owner, major contributor, occasional)?”
+Learning Proof: “You list Kotlin since 2024. Any public sample or micro-project link?”
+Values/Culture: “Rank what matters most: learning budget, remote flexibility, product impact, stability. (Order 1–4)”
+Availability: “Earliest start date? (DD/MM)”
+Location/Eligibility: “Are you currently authorized to work in 🇨🇦? (Yes/No)”
+

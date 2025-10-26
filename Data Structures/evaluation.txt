@@ -1,0 +1,115 @@
+{
+  "candidate_id": "dev@example.com",
+  "job_id": "ios_engineer_2025_09",
+  "run_id": "run_001",
+  "scoring_scale": "1–5",
+  "rubric": "1=Insufficient | 2=Basic | 3=Solid | 4=Strong | 5=Exceptional",
+  "timestamp_utc": "2025-10-25T10:00:00Z",
+
+  "professional_experience": {
+    "relevance": { "score": 4, "confidence": "High", "justification": "Stack & responsibilities match JD.", "data_sources": ["cv","linkedin"] },
+    "impact": { "score": 3, "confidence": "Med", "justification": "Mentions growth; few concrete metrics.", "data_sources": ["cv","portfolio"] },
+    "consistency": { "score": 4, "confidence": "Med", "justification": "One 4-month gap; plausible.", "data_sources": ["linkedin"] },
+    "responsibility_level": { "score": 3, "confidence": "Med", "justification": "Led small feature squads.", "data_sources": ["cv"] },
+    "adaptability": { "score": 4, "confidence": "High", "justification": "Shifted Android→iOS with results.", "data_sources": ["cv","github"] },
+    "section_score": 3.6,
+    "questions": [
+      "Between May–Sep/2023 there’s a short gap — were you studying, traveling, or transitioning roles?",
+      "For your latest app, which metric improved most (e.g., DAU, retention) and by roughly how much?"
+    ],
+    "notes": [
+      "Gap = finishing university semester.",
+      "30-day retention improved ~22% after onboarding changes."
+    ]
+  },
+
+  "technical_skills": {
+    "depth": { "score": 4, "confidence": "High", "justification": "Advanced SwiftUI/Combine patterns.", "data_sources": ["github"] },
+    "breadth": { "score": 3, "confidence": "Med", "justification": "iOS strong; backend basics.", "data_sources": ["github","cv"] },
+    "learning_velocity": { "score": 5, "confidence": "High", "justification": "Adopted SwiftData & Supabase in 12m.", "data_sources": ["github","certs"] },
+    "code_quality": { "score": 3, "confidence": "Med", "justification": "Clean structure; limited CI/testing info.", "data_sources": ["github"] },
+    "artifact_quality": { "score": 4, "confidence": "High", "justification": "Docs, screenshots, demos present.", "data_sources": ["github","portfolio"] },
+    "section_score": 3.8,
+    "questions": [
+      "Do you target any code coverage or use CI (e.g., Xcode Cloud/GitHub Actions)?",
+      "Link a repo using SwiftData in production."
+    ],
+    "notes": [
+      "Uses GitHub Actions; ~70% coverage on main app.",
+      "Provided repo: ios-finance-app with SwiftData migrations."
+    ]
+  },
+
+  "motivation": {
+    "hackathons": { "score": 4, "confidence": "High", "justification": "3 events; 1 finalist.", "data_sources": ["devpost","linkedin"] },
+    "awards": { "score": 4, "confidence": "High", "justification": "Scholarship & local AI award.", "data_sources": ["press"] },
+    "github_cadence": { "score": 3, "confidence": "Med", "justification": "Stable; slight dip last quarter.", "data_sources": ["github"] },
+    "projects_per_time": { "score": 4, "confidence": "High", "justification": "4 shipped apps in 24m.", "data_sources": ["appstore","cv"] },
+    "section_score": 3.75,
+    "questions": [
+      "For your finalist project, what was your key contribution and hardest technical hurdle?"
+    ],
+    "notes": [
+      "Built real-time chat using WebSockets; solved race conditions under load."
+    ]
+  },
+
+  "education_learning": {
+    "degree_fit": { "score": 3, "confidence": "Med", "justification": "CS degree; limited mobile focus.", "data_sources": ["cv"] },
+    "college_signal": { "score": 3, "confidence": "Med", "justification": "Solid program; no GPA shared.", "data_sources": ["cv"] },
+    "certificates": { "score": 4, "confidence": "High", "justification": "Recent verifiable iOS certs.", "data_sources": ["credly","coursera"] },
+    "stack_versatility": { "score": 3, "confidence": "Med", "justification": "iOS primary; some Node/SQL.", "data_sources": ["github"] },
+    "section_score": 3.25,
+    "questions": [
+      "Share verification links for your 2025 certificates."
+    ],
+    "notes": [
+      "Provided Coursera and Credly verification URLs."
+    ]
+  },
+
+  "soft_skills_behavioral": {
+    "collaboration": { "score": 4, "confidence": "Med", "justification": "Supportive PR feedback; on-time reviews.", "data_sources": ["github"] },
+    "communication": { "score": 4, "confidence": "High", "justification": "Clear write-ups & READMEs.", "data_sources": ["portfolio"] },
+    "professional_presence": { "score": 3, "confidence": "Med", "justification": "Professional LinkedIn; few talks.", "data_sources": ["linkedin"] },
+    "values_ambitions": { "score": 3, "confidence": "Low", "justification": "Preferred environment unclear.", "data_sources": ["chatbot_pending"] },
+    "section_score": 3.5,
+    "questions": [
+      "What team setup helps you perform best (structured squads, lean startup, fully remote)?",
+      "How do you handle disagreements in code reviews?"
+    ],
+    "notes": [
+      "Prefers small agile teams; async-first comms.",
+      "Uses data/experiments to resolve disagreements."
+    ]
+  },
+
+  "eligibility_filters": [
+    { "rule": "Canada-based", "ok": true },
+    { "rule": "21+", "ok": true },
+    { "rule": "SwiftUI experience required", "ok": true }
+  ],
+
+  "overall": {
+    "pillar_weights": {
+      "professional_experience": 0.30,
+      "technical_skills": 0.35,
+      "motivation": 0.15,
+      "education_learning": 0.10,
+      "soft_skills_behavioral": 0.10
+    },
+    "pillar_scores": {
+      "professional_experience": 3.6,
+      "technical_skills": 3.8,
+      "motivation": 3.75,
+      "education_learning": 3.25,
+      "soft_skills_behavioral": 3.5
+    },
+    "total_score": 3.6475, // to calculate
+    "confidence_overall": "High", // mean of all the confidences
+    "questions": [], // all questions
+    "notes": [
+      "All follow-ups answered; confidence raised."
+    ] // all answers
+  }
+}

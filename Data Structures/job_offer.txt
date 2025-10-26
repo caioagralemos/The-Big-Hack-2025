@@ -1,0 +1,20 @@
+{
+  "job_offer": {
+    "id": "ios_engineer_2025_09",
+    "title": "iOS Engineer (SwiftUI)",
+    "description": "",
+    "company_id": "00000000-0000-0000-0000-000000000000",
+    "scoring_scale": "1–5",
+    "rubric": "1=Insufficient | 2=Basic | 3=Solid | 4=Strong | 5=Exceptional",
+    "eligibility_filters": ["Canada-based", "21+", "SwiftUI experience required"],
+    "weights": {
+      "professional_experience": 0.30,
+      "technical_skills": 0.35,
+      "motivation": 0.15,
+      "education_learning": 0.10,
+      "soft_skills_behavioral": 0.10
+    },
+    "created_at": "2025-10-25T10:00:00Z",
+    "updated_at": "2025-10-25T10:00:00Z"
+  }
+}

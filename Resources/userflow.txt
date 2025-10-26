@@ -1,0 +1,17 @@
+Company Dashboard → Create New Role
+       ↓
+Fill Role Info + Core Skills + Dimension Weight
+       ↓
+Generate Secure Candidate Link
+       ↓
+Candidate Clicks Link → Views Role Description
+       ↓
+Candidate Fills Form (CV + Links)
+       ↓
+AI Extracts & Evaluates → Detects Missing Data
+       ↓
+WhatsApp AI Chat Fills Gaps
+       ↓
+Complete Candidate Profile → Stored in Company Dashboard
+       ↓
+Company Views Analytics & Comparisons

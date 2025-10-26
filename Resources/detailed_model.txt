@@ -1,0 +1,40 @@
+Work Experience
+Role Relevance (to job spec) → LLM semantic match (JD ↔ CV/LinkedIn/projects); cosine on skill embeddings; JD → required/bonus skills. Sources: CV, LinkedIn, portfolio, job spec.
+Impact (outcomes) → Keyword+IE for metrics (“+%”, “DAU”, “€”, “reduced”), classify impact tier. Sources: CV, case studies, app store stats.
+Consistency (gaps) → Timeline diff + LLM rationales (study, caregiving). Sources: CV, LinkedIn.
+Responsibility Level → Title normalization (IC/Sr/Lead/Manager), team size, budget. Sources: CV, LinkedIn.
+Adaptability → Role/industry/stack changes per year, success markers post-change. Sources: CV, LinkedIn, repos.
+
+
+
+Skills & Technical
+Depth per stack → Repos by language, PR complexity, tests, release cadence. Sources: GitHub/GitLab/Bitbucket APIs.
+Breadth (T-shape) → Count distinct stacks with evidence. Sources: repos, CV.
+Learning Velocity (12m) → New tech mentions by timestamp, recent certs. Sources: GitHub commit history, cert sites (Credly, Coursera).
+Code Quality Proxy → Lint/CI badges, PR review acceptance, issue closure. Sources: GitHub GraphQL.
+Artifact Quality → README clarity, docs, demo links. Sources: repos.
+
+
+
+Motivation
+Hackathons → Participation, prizes, recency. Sources: Devpost, MLH, event sites, cv, linkedin, web search applicant's name.
+Awards/Recognitions → Verified wins, org credibility. Sources: issuer pages, press, web search applicant's name.
+Github Streak & Cadence → Longest streak, median weekly commits (normalize by role). Sources: GitHub.
+Projects per Time → Shipped projects / last 24m; update frequency. Sources: repos, app stores.
+
+
+
+Education & Learning
+Degree Fit → Field↔role semantic distance. Sources: CV, LinkedIn.
+College Signal → Program rigor (public dataset/league tables, avoid bias—cap weight). Sources: curated list.
+Certificates → Relevance, issuer trust, recency. Sources: Credly/Coursera/Udemy/edX.
+Stack Versatility → #stacks with hands-on evidence. Sources: CV+repos.
+
+
+
+Soft Skills & Behavioral
+Collaboration → PR comments tone (sentiment), peer interactions, issue triage helpfulness. Sources: GitHub issues/PRs.
+Communication → Portfolio/CV clarity; talk slides/videos; README structure. Sources: personal site, Slideshare, YouTube/Vimeo.
+Professional Presence → Signal vs noise ratio on public socials (work posts, talks). Sources: LinkedIn/Twitter (public), Instagram
+Values/Ambitions → Social media and/or WhatsApp Q&A extraction (see stage 2). Sources: chatbot.
+Sociability -> Instagram (check followers, likes and comments if available to see if applicant is sociable), Twitter, Youtube presence

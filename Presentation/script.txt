@@ -1,0 +1,84 @@
+[Slide 1 – Il problema: il recruiter esausto]
+Tutto parte da qui.
+Un recruiter sommerso da centinaia di CV, fogli Excel e mail da gestire.
+Ore di lettura, valutazioni soggettive, e la sensazione di non riuscire mai a vedere davvero le persone dietro i documenti.
+Il risultato? Processi lenti, costosi e poco equi.
+È da questo punto di frustrazione che nasce Smartreq.
+
+⸻
+
+[Slide 2 – L’intuizione: la mente che parla]
+Ci siamo chiesti: e se l’intelligenza artificiale potesse dialogare invece di limitarsi ad analizzare?
+Se potesse collegare la capacità di comprendere a quella di comunicare?
+È così che nasce il cuore del progetto: un sistema che unisce ragionamento analitico e linguaggio naturale — la mente che si connette alla conversazione.
+
+⸻
+
+[Slide 3 – I cinque robot specializzati]
+Per rendere l’analisi davvero completa, abbiamo costruito cinque robot, ognuno specialista in una dimensione chiave della valutazione.
+Pro, l’esperto di esperienza professionale, valuta rilevanza e impatto.
+Tech, l’ingegnere, misura profondità e qualità del codice.
+Moty, il motivatore, osserva passione e costanza nei progetti.
+Edu, il mentore, analizza formazione e capacità di apprendimento.
+E Softy, l’empatico, valuta collaborazione, comunicazione e valori personali.
+Cinque menti diverse, che insieme formano un’unica analisi strutturata, trasparente e spiegabile.
+
+⸻
+
+[Slide 4 – Le fonti di conoscenza]
+Ognuno di questi robot studia dati reali provenienti da più fonti:
+CV, profili LinkedIn, GitHub, certificazioni, portfolio personali.
+Tutto viene convertito in un formato standard e valutato in modo coerente,
+garantendo che ogni candidato venga compreso per quello che sa fare e non solo per come si presenta.
+
+⸻
+
+[Slide 5 – L’agente conversazionale su WhatsApp]
+Ma c’è un elemento che rende Smartreq davvero umano: Mia, l’agente AI su WhatsApp.
+Quando un’informazione è mancante o ambigua, Mia contatta direttamente il candidato.
+Con tono naturale e conversazione fluida, raccoglie risposte, esempi o link, e aggiorna automaticamente la valutazione.
+È come avere un recruiter digitale, attivo 24 ore su 24, che non perde mai il contatto umano.
+
+⸻
+
+[Slide 6 – La dashboard: panoramica generale]
+Dall’altro lato, le aziende vedono tutto dentro una dashboard chiara e intuitiva.
+Statistiche in tempo reale, candidati più in linea con il ruolo, tassi di corrispondenza, tempi medi di assunzione — tutto visualizzato con pochi clic.
+È il punto di vista completo del processo di selezione.
+
+⸻
+
+[Slide 7 – La dashboard: dettaglio candidato]
+Entrando nel dettaglio, ogni candidato ha un profilo analitico multidimensionale.
+Le valutazioni dei cinque robot vengono aggregate e spiegate graficamente: punti di forza, aree di miglioramento, e note generative che motivano ogni punteggio.
+Tutto è spiegabile, verificabile e trasparente.
+
+⸻
+
+[Slide 8 – La dashboard: creazione offerte di lavoro]
+Le aziende possono creare nuovi ruoli direttamente dalla piattaforma,
+definendo pesi personalizzati per ogni dimensione di valutazione.
+Questo rende Smartreq adattabile a qualunque settore,
+dal mondo tech alle posizioni creative o manageriali.
+
+⸻
+
+[Slide 9 – L’impatto]
+I risultati parlano da soli:
+-96% di tempo per creare una shortlist,
+-80% di costi per assunzione,
++37% di offerte accettate,
+e una soddisfazione dei candidati di 4,6 su 5.
+Smartreq non sostituisce i recruiter: li libera.
+Dalla burocrazia al valore umano.
+
+⸻
+
+[Slide 10 – Conclusione]
+Smartreq è più di una piattaforma di recruiting.
+È un ecosistema di intelligenze — cinque robot, un agente conversazionale e un dashboard integrato — che trasformano il modo in cui le aziende incontrano il talento.
+Più dati, meno pregiudizi.
+Più empatia, meno tempo perso.
+Perché dietro ogni profilo c’è una persona.
+E noi vogliamo che ogni persona abbia finalmente voce.
+Grazie.

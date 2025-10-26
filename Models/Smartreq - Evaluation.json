@@ -1,0 +1,695 @@
+{
+  "name": "Smartreq - Evaluation",
+  "nodes": [
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1652b56-0a33-4359-a47f-54f1ecb0dc9d",
+              "name": "Name",
+              "value": "={{ $json.body.name }}",
+              "type": "string"
+            },
+            {
+              "id": "1abfd3b8-e398-40d2-9d6b-cdee4f38e6f4",
+              "name": "Phone",
+              "value": "={{ $json.body.phone_number.replaceAll(\" \", \"\") }}",
+              "type": "string"
+            },
+            {
+              "id": "fb7561de-0dbf-40b9-8813-fa203c478eae",
+              "name": "Email",
+              "value": "={{ $json.body.email }}",
+              "type": "string"
+            },
+            {
+              "id": "4b03c6ad-118c-4983-931e-cfa927f93ca2",
+              "name": "CV",
+              "value": "={{ $json.body.cv }}",
+              "type": "string"
+            },
+            {
+              "id": "8ee78b90-b684-40f8-a4fb-5d040557084d",
+              "name": "Linkedin",
+              "value": "={{ $json.body.linkedin || \"User hasn't provided LinkedIn access. Ignore everything related to LinkedIn parsing.\" }}",
+              "type": "string"
+            },
+            {
+              "id": "59070bae-ba37-4339-bf9b-bedabed006a6",
+              "name": "Job Offer",
+              "value": "={{ $json.body.job_offer }}",
+              "type": "object"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        576,
+        -496
+      ],
+      "id": "16cd06cf-29ea-4d9a-b5b2-fbb5e2df7df0",
+      "name": "Organize data"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $(\"Organize data\").item.json.Phone }}",
+        "contextWindowLength": 10
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryRedisChat",
+      "typeVersion": 1.5,
+      "position": [
+        1792,
+        -336
+      ],
+      "id": "2cfccfe0-041f-4428-a48e-2866c6aa2660",
+      "name": "Redis Chat Memory",
+      "credentials": {
+        "redis": {
+          "id": "VSnBsqa9tDo8MODm",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "smartreq",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        368,
+        -496
+      ],
+      "id": "db12690f-1a52-4f84-b85e-48d3fee4066d",
+      "name": "Webhook",
+      "webhookId": "f4b7a7bf-bc5a-4011-99d0-430f191bc3ac"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sei un assistente AI che valuta la sezione \"Esperienza Professionale\" dei CV dei candidati. Il tuo compito è analizzare esclusivamente l'esperienza lavorativa di un candidato rispetto a una specifica offerta di lavoro. NOTA IMPORTANTE: Questo prompt si concentra SOLO sull'Esperienza Lavorativa, poiché ci sono altri prompt dedicati ad altre aree del CV.\n\nEcco l'offerta di lavoro da valutare:\n<job_offer>\n{{ $json['Job Offer'].toJsonString() }}\n</job_offer>\n\nEcco i dati del CV del candidato (include testo CV e LinkedIn se fornito):\n<cv_data>\n{{ $json.CV }}\n</cv_data>\n\n<scoring_scale>\n{{ $json['Job Offer'].scoring_scale }}\n</scoring_scale>\n\n<rubric>\n{{ $json['Job Offer'].rubric }}\n</rubric>\n\n## TOOLS\n- fetchUrl(url: string) → string\n  Recupera contenuti HTML/JSON da URL esplicitamente menzionati.\n\n## Vincoli Critici\n- Usa solo URL esplicitamente scritti nel CV (non inferiti)\n- Non cercare sul web o inventare dati\n- Non fabbricare dettagli mancanti\n- Concentrati esclusivamente sul contenuto professionale\n\n## Dimensioni di Valutazione\n\nValuta il candidato su queste 5 dimensioni:\n\n**Relevance (Rilevanza)** — Quanto bene i ruoli, competenze e responsabilità del candidato corrispondono al titolo e alla descrizione dell'offerta di lavoro.\n\n**Impact (Impatto)** — Risultati quantificati o ben descritti (%, DAU, tasso di crash, ricavi, statistiche App Store). La corroborazione esterna aumenta la fiducia.\n\n**Consistency (Coerenza)** — Continuità temporale e progressione realistica. Segnala lacune inspiegabili ≥2 mesi.\n\n**Responsibility Level (Livello di Responsabilità)** — Indicatori di seniority e leadership: titoli, \"ha guidato/gestito/posseduto\", dimensione del team, lavoro interfunzionale.\n\n**Adaptability (Adattabilità)** — Transizioni di successo tra ruoli, stack o settori, con successo misurabile post-cambiamento.\n\n## Livelli di Fiducia\n- **High**: Evidenze chiare da fonti multiple corroborate\n- **Med**: Evidenze testuali chiare ma senza corroborazione esterna\n- **Low**: Evidenze vaghe, incoerenti o incomplete\n\n## Linee Guida per le Domande\n- Includi massimo 0-2 domande\n- Chiedi solo per ambiguità genuine o dati mancanti\n- Mantienile concise (1 riga), professionali e specifiche\n\n## Processo\n\n1. Analizza i dati CV per: ruoli, aziende, date, responsabilità, risultati e competenze\n2. Estrai URL solo dal testo CV. Per ciascuno, esegui fetchUrl() seguito dal parser specifico del dominio\n3. Normalizza la timeline di carriera → identifica lacune inspiegabili ≥2 mesi\n4. Per ogni dimensione, scrivi prima la tua giustificazione, poi assegna un punteggio (1-5, intero)\n5. Determina la fiducia per dimensione basata sulla qualità delle fonti\n6. Aggiungi fino a 2 domande chiarificatrici solo se veramente necessarie\n7. Traccia quali fonti dati hai usato per ogni dimensione\n8. Lasciare le \"notes\" vuote per le risposte alle domande\n\n## Fonti Dati\n- \"cv\" — Testo CV fornito\n- \"linkedin_text\" — Testo estratto da LinkedIn del candidato\n- \"github\" — Dati analizzati da parseGitHub\n- \"portfolio\" — Dati analizzati da parsePortfolio  \n- \"appstore\" — Dati analizzati da parseAppStore",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        832,
+        -32
+      ],
+      "id": "daae6363-987a-4f24-aa26-50d809704d8f",
+      "name": "Professional Experience"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Perfetto — ecco la versione del prompt ottimizzata per risposte il più dettagliate possibile, mantenendo lo stesso schema di output e i vincoli (niente tool esterni in questo nodo). Ho aggiunto indicazioni forti su granularità, prove concrete, timeline normalizzate, conteggi, metriche, e razionali di confidenza, così le giustificazioni risultano dense e utili.\n\n⸻\n\nSei un assistente AI specializzato nella valutazione della sezione “Competenze Tecniche e Tecnologiche” del profilo di un candidato rispetto a una specifica offerta. Il tuo obiettivo è produrre giustificazioni estremamente dettagliate e basate su evidenze, senza cambiare il formato JSON richiesto.\n\nINPUT\n\n<job_offer>\n{{ $('Organize data').item.json['Job Offer'].toJsonString() }}  \n</job_offer>\n\n<cv_text>\n{{ $('Organize data').item.json.CV }}  \n</cv_text>\n\n<linkedin_text>\n{{ $('Organize data').item.json.Linkedin }}  \n</linkedin_text>\n\n<scoring_scale>\n{{ $('Organize data').item.json['Job Offer'].scoring_scale }}  \n</scoring_scale>\n\n<rubric>  \n{{ $('Organize data').item.json['Job Offer'].rubric }}  \n</rubric>\n\n\nVINCOLI (IMPORTANTI)\n\t•\tNon usare strumenti web o URL esterni in questo nodo (ignora fetchUrl).\n\t•\tUsa solo le informazioni contenute in <cv_text> e <linkedin_text>.\n\t•\tSe mancano dati, dichiaralo esplicitamente e imposta una confidenza più bassa.\n\t•\tPunteggi: interi 1–5 secondo scoring_scale e rubric.\n\t•\tsection_score deve essere null (calcolato a valle).\n\t•\tquestions: 0–2 domande brevi, WhatsApp-friendly, solo per chiarire ambiguità reali.\n\t•\tdata_sources: scegli tra [\"cv\",\"linkedin\",\"job_application\",\"portfolio\",\"other\"].\n\nMETODOLOGIA DI VALUTAZIONE (massima granularità)\n\nValuta le 5 dimensioni seguenti e, per ciascuna, scrivi una giustificazione molto dettagliata (idealmente 3–6 frasi), che includa tecnologie specifiche, progetti, timeline (YYYY/MM), metriche e motivazione del punteggio:\n\t1.\tProfondità (depth) – Padronanza delle tecnologie core del ruolo.\n\t•\tCita framework/linguaggi (versioni se presenti), pattern avanzati, componenti usati, integrazioni difficili.\n\t•\tCollega chiaramente le evidenze ai requisiti del Job Offer (es. “SwiftUI, Combine, Core Data” ↔ richieste JD).\n\t•\tEvidenzia segnali di produzione (app rilasciate, carico utenti, performance, affidabilità).\n\t2.\tAmpiezza (breadth) – Gamma di stack con evidenza concreta.\n\t•\tConta gli stack distinti (linguaggi, framework, paradigmi) con esempi di utilizzo reale.\n\t•\tSottolinea varietà (mobile/web/backend/ML/DevOps) e capacità di passare da uno all’altro.\n\t3.\tVelocità di apprendimento (learning_velocity, 12 mesi) – Novità negli ultimi 12 mesi.\n\t•\tElenca tecnologie/certificazioni/corsi acquisiti di recente con date/periodi; collega a progetti recenti.\n\t•\tIndica segnali di adozione rapida (da “prima menzione” a “uso in progetto” entro pochi mesi).\n\t4.\tIndicatori di qualità del codice (code_quality) – Pratiche professionali.\n\t•\tCerca menzioni di test, CI/CD, code review, branching, lint, standard, doc.\n\t•\tSe non presenti, dichiaralo esplicitamente e spiega l’impatto sulla confidenza/punteggio.\n\t5.\tQualità artefatti (artifact_quality) – Qualità di app/siti/portfolio/README/demo.\n\t•\tValuta chiarezza delle README, presenza di demo/screenshot, istruzioni di build, changelog.\n\t•\tEvidenzia rilasci pubblici (app store, siti live) e presentazione curata.\n\nConfidenza (spiega sempre il perché nella giustificazione):\n\t•\tHigh = più punti coerenti nel testo (CV + LinkedIn) e dettagli concreti.\n\t•\tMed = evidenze sufficienti ma parziali o mono-sorgente.\n\t•\tLow = vaghe o insufficienti.\n\nCHECKLIST DI COPERTURA (usa internamente, non stampare)\n\t•\tMappa JD ↔ competenze citando tecnologie/attività corrispondenti.\n\t•\tNormalizza timeline (YYYY/MM) quando disponibile.\n\t•\tRiporta metriche (%, latenza, utenti, rilasci) se presenti.\n\t•\tEvidenzia lacune e impatto su punteggio/confidenza.\n\t•\tEvita frasi generiche: privilegia esempi, numeri, titoli di progetto, stack.\n\nOUTPUT (restituisci solo questo JSON SENZA MARKDOWN OR CODE BLOCKS)\n\n{\n  \"technical_skills\": {\n    \"depth\": {\n      \"justification\": \"testo molto dettagliato con tecnologie, progetti, timeline, motivazione del punteggio e razionale della confidenza\",\n      \"score\": 1,\n      \"confidence\": \"High\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"breadth\": {\n      \"justification\": \"testo molto dettagliato; elenca stack distinti con esempi concreti\",\n      \"score\": 1,\n      \"confidence\": \"Med\",\n      \"data_sources\": [\"cv\",\"linkedin\"]\n    },\n    \"learning_velocity\": {\n      \"justification\": \"testo molto dettagliato; novità 12 mesi con date/periodi e applicazioni pratiche\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"code_quality\": {\n      \"justification\": \"testo molto dettagliato; pratiche (test, CI/CD, review, doc) o assenze dichiarate\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"artifact_quality\": {\n      \"justification\": \"testo molto dettagliato; qualità README/demo/rilasci e presentazione\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"section_score\": 3,\n    \"questions\": [],\n    \"notes\": []\n  }\n}\n\nSTILE DELLE GIUSTIFICAZIONI (per massima ricchezza informativa)\n\t•\tUsa dati specifici: tecnologie, componenti, pattern, progetti, metriche, date.\n\t•\tCollega ogni evidenza al requisito del Job Offer (esplicita il match).\n\t•\tSpiega perché il punteggio è X/5 e perché la confidenza è High/Med/Low.\n\t•\tSe una prova manca, dichiaralo chiaramente (“Nessuna evidenza di CI/CD nel materiale fornito”).\n\nInizia ora la valutazione e restituisci solo il JSON richiesto.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1152,
+        -32
+      ],
+      "id": "00776a34-1ad5-4fe5-a872-6414db63bb38",
+      "name": "Skills & Technical"
+    },
+    {
+      "parameters": {
+        "toolDescription": "Call this tool to fetch raw HTML from a public URL (non-LinkedIn). The input should be a string with the exact URL from the CV. Returns HTML text or an error starting with ERROR:",
+        "url": "=https://api.scraperapi.com",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "url",
+              "value": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('parameters0_Value', `encodeURIComponent(url)`, 'string') }}"
+            },
+            {
+              "name": "api_key",
+              "value": "92db31f1c45647c2245ec924c5c6a7b9"
+            },
+            {
+              "name": "render",
+              "value": "false"
+            }
+          ]
+        },
+        "options": {},
+        "optimizeResponse": true,
+        "responseType": "html",
+        "onlyContent": true,
+        "elementsToOmit": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Elements_To_Omit', ``, 'string') }}",
+        "truncateResponse": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Truncate_Response', ``, 'boolean') }}"
+      },
+      "type": "n8n-nodes-base.httpRequestTool",
+      "typeVersion": 4.2,
+      "position": [
+        1536,
+        -336
+      ],
+      "id": "515dd98a-faaf-4a30-9bd3-23d0b1a5c128",
+      "name": "fetchUrl"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sei un esperto valutatore di profili candidati specializzato esclusivamente nella sezione \"Motivazione\". Il tuo compito è misurare iniziativa, persistenza e velocità di realizzazione basandoti su hackathon, premi, attività GitHub e progetti completati.\n\nEcco l'offerta di lavoro:\n<job_offer>\n{{ $('Organize data').item.json['Job Offer'].toJsonString() }}\n</job_offer>\n\nEcco il testo del CV:\n<cv_text>\n{{ $('Organize data').item.json.CV }}\n</cv_text>\n\nEcco il testo del profilo LinkedIn:\n<linkedin_text>\n{{ $('Organize data').item.json.Linkedin }}\n</linkedin_text>\n\nEcco la scala di valutazione:\n<scoring_scale>\n{{ $('Organize data').item.json['Job Offer'].scoring_scale }}\n</scoring_scale>\n\nEcco la rubrica di valutazione:\n<rubric>\n{{ $('Organize data').item.json['Job Offer'].rubric }}\n</rubric>\n\n## TOOLS\n- fetchUrl(url: string) → string\n  Recupera contenuti HTML/JSON da URL esplicitamente menzionati.\n\nLINEE GUIDA DETTAGLIATE PER LA VALUTAZIONE:\n\n1. HACKATHONS\nObiettivo: valutare iniziativa competitiva, recenza e profondità del contributo.\nSegnali: numero partecipazioni, credibilità evento (MLH, NASA, Google, ecc.), risultato (partecipante < finalista < vincitore < globale), rilevanza tecnica.\n\nPunteggi:\n- 1: Nessuna attività hackathon o affermazioni non verificabili\n- 2: Una partecipazione senza risultati; rilevanza generica\n- 3: 2-3 partecipazioni, almeno una menzione finalista o premio, tecnicamente rilevante\n- 4: 3+ eventi negli ultimi 18 mesi con almeno un finalista o diversità tematica (AI, hardware, ecc.)\n- 5: Riconoscimento nazionale/globale (Top 10%, finalista/vincitore internazionale) con prova su Devpost o MLH\n\n2. AWARDS/RICONOSCIMENTI\nObiettivo: misurare validazione di terze parti dell'eccellenza.\nSegnali: credibilità dell'ente (azienda, università, org. nazionale), tasso di selezione, rilevanza per il ruolo, recenza.\n\nPunteggi:\n- 1: Nessun premio verificabile\n- 2: Menzione minore o locale, fonte non verificabile\n- 3: Borsa di studio istituzionale, competizione locale, o certificato con ente credibile\n- 4: Premio nazionale selettivo o specifico del settore (es. Google, Apple, gov. nazionale)\n- 5: Riconoscimento globale o altamente selettivo (es. WWDC Scholar, Forbes 30 Under 30, premio ACM) con stampa verificata\n\n3. GITHUB_CADENCE\nObiettivo: valutare momentum ingegneristico sostenuto.\nSegnali: streak di commit, commit mediani/settimana, consistenza vs ruolo, gap.\n\nPunteggi:\n- 1: Inattivo > 6 mesi o nessun repo\n- 2: Attività sporadica; lunghi periodi di inattività\n- 3: Attività costante (1-3 commit/settimana media); pause occasionali\n- 4: Forte consistenza (4-10 commit/settimana media), streak visibili > 3 mesi\n- 5: Disciplina eccezionale (10+ commit/settimana media, streak > 6 mesi, attivo su progetti multipli)\n\n4. PROJECTS_PER_TIME\nObiettivo: misurare tasso di creazione e impatto output negli ultimi 24 mesi.\nSegnali: numero prodotti rilasciati, frequenza aggiornamenti, varietà (mobile/web/API).\n\nPunteggi:\n- 1: Nessun progetto completato in > 2 anni\n- 2: 1 progetto o proof-of-concept non finiti\n- 3: 2-3 progetti con almeno un rilascio pubblico\n- 4: 4-6 progetti rilasciati o mantenuti recentemente, stack tecnologico diverso\n- 5: 6+ progetti con aggiornamenti regolari, metriche utenti, o presenza app-store\n\nSTILE DELLE GIUSTIFICAZIONI:\nPer ogni dimensione, scrivi ragionamenti concisi basati su evidenze. Includi indicatori quantitativi e qualitativi, es.:\n\"3 hackathon nel 2024 (finalista NASA Apps + 2 hackathon AI). Il pattern mostra forte motivazione esterna e teamwork.\"\n\nDOMANDE:\nAggiungi 0-2 domande di chiarimento solo se i dati sono poco chiari o mancanti.\nEsempi:\n- \"Quale progetto hackathon riflette meglio il tuo contributo individuale?\"\n- \"Il premio del 2023 è basato sul merito o sulla partecipazione?\"\n\nNOTE:\nDeve essere lasciato vuoto per le risposte alle domande che verranno ottenute tramite WhatsApp.\n\nLOGICA CONFIDENCE:\n- High: ≥ 2 fonti dati indipendenti confermano\n- Med: prova testuale solida o fonte singola\n- Low: affermazioni incerte o non verificabili\n\nDATA SOURCES:\n- \"devpost\" → evidenza hackathon\n- \"mlh\" → piattaforma hackathon  \n- \"press\" → verifica premi\n- \"github\" → metriche cadenza\n- \"appstore\" → evidenza progetti\n- \"cv\", \"linkedin_text\" → validazione auto-riportata\n\nConcentrati ESCLUSIVAMENTE sulla valutazione della motivazione. Analizza ogni dimensione con precisione, fornendo giustificazioni dettagliate e concrete basate sui dati disponibili.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1472,
+        -32
+      ],
+      "id": "3d7f8bf5-0bd3-4c9e-b35c-fdeaa0491f7d",
+      "name": "Motivation"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"technical_skills\": {\n    \"depth\": {\n      \"justification\": \"testo molto dettagliato con tecnologie, progetti, timeline, motivazione del punteggio e razionale della confidenza\",\n      \"score\": 1,\n      \"confidence\": \"High\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"breadth\": {\n      \"justification\": \"testo molto dettagliato; elenca stack distinti con esempi concreti\",\n      \"score\": 1,\n      \"confidence\": \"Med\",\n      \"data_sources\": [\"cv\",\"linkedin\"]\n    },\n    \"learning_velocity\": {\n      \"justification\": \"testo molto dettagliato; novità 12 mesi con date/periodi e applicazioni pratiche\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"code_quality\": {\n      \"justification\": \"testo molto dettagliato; pratiche (test, CI/CD, review, doc) o assenze dichiarate\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"artifact_quality\": {\n      \"justification\": \"testo molto dettagliato; qualità README/demo/rilasci e presentazione\",\n      \"score\": 1,\n      \"confidence\": \"Low\",\n      \"data_sources\": [\"cv\"]\n    },\n    \"section_score\": 3,\n    \"questions\": [\"\"],\n    \"notes\": [\"\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1328,
+        176
+      ],
+      "id": "4ab0b73b-59af-4f98-8075-2e5170bd573d",
+      "name": "Skills & Technical Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"motivation\": {\n    \"hackathons\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"awards\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"github_cadence\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"projects_per_time\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"section_score\": null,\n    \"questions\": [\"\"],\n    \"notes\": [\"\"]\n  }\n}\n"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        176
+      ],
+      "id": "eb09c435-a67e-4488-994d-e5b4aba8f8b8",
+      "name": "Motivation Output Parser"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"professional_experience\": {\n    \"relevance\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"impact\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"consistency\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"responsibility_level\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"adaptability\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"section_score\": null,\n    \"questions\": [\"\"],\n    \"notes\": [\"\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1008,
+        176
+      ],
+      "id": "31f63cea-3168-4334-91ad-f5311f549fa2",
+      "name": "Professional Experience Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sei un assistente AI specializzato nella valutazione della sezione “Education & Learning” dei profili dei candidati. Valuterai le basi accademiche e di apprendimento continuo che supportano la performance tecnica del candidato.\n\nEcco l'offerta di lavoro:\n<job_offer>\n{{ $('Organize data').item.json['Job Offer'].toJsonString() }}\n</job_offer>\n\nEcco il testo del CV:\n<cv_text>\n{{ $('Organize data').item.json.CV }}\n</cv_text>\n\nEcco il testo del profilo LinkedIn:\n<linkedin_text>\n{{ $('Organize data').item.json.Linkedin }}\n</linkedin_text>\n\nEcco la scala di valutazione:\n<scoring_scale>\n{{ $('Organize data').item.json['Job Offer'].scoring_scale }}\n</scoring_scale>\n\nEcco la rubrica di valutazione:\n<rubric>\n{{ $('Organize data').item.json['Job Offer'].rubric }}\n</rubric>\n\n## TOOLS\n- fetchUrl(url: string) → string\n  Recupera contenuti HTML/JSON da URL esplicitamente menzionati.\n\nIL TUO RUOLO\nSei focalizzato esclusivamente sulla sezione di valutazione “Education & Learning”. Non valutare altri aspetti del candidato. La tua valutazione deve coprire esattamente quattro dimensioni: degree_fit, college_signal, certificates e stack_versatility.\n\nDIMENSIONI DI VALUTAZIONE\nValuta ciascuna dimensione su una scala 1-5 in base alla rubrica fornita. Scrivi tutte le giustificazioni in italiano, ma mantieni la struttura JSON e i nomi dei campi in inglese.\n\n1. Degree Fit (degree_fit)\n\nMisura quanto il titolo di studio formale del candidato sia allineato ai requisiti del ruolo. Considera area di studio, corsi rilevanti, progetti di ricerca e tempo trascorso dalla laurea.\n\n2. College Signal (college_signal)\n\nValuta il rigore e la reputazione dell’istituzione educativa tramite ranking verificabili, accreditamento o produzione di ricerca. Limita i bias istituzionali ponendo un tetto al peso di questa dimensione.\n\n3. Certificates (certificates)\n\nValuta l’apprendimento continuo attraverso certificazioni professionali. Considera l’affidabilità dell’ente emittente, la pertinenza dell’argomento, la recentità e lo stato di verifica.\n\n4. Stack Versatility (stack_versatility)\n\nValuta l’ampiezza delle competenze tecniche su diversi linguaggi, framework e paradigmi, convalidata da evidenze di progetti reali.\n\nLIVELLI DI CONFIDENZA\n\t•\tHigh: Due o più punti dati verificati (ad es. link ufficiale + menzione nel CV)\n\t•\tMed: Evidenza chiara ma da una sola fonte\n\t•\tLow: Affermazioni ambigue o non verificabili\n\nFONTI DATI\n\nUsa queste etichette per indicare dove è stata trovata l’informazione:\n\t•\t“cv”: Informazioni dal testo del CV\n\t•\t“linkedin_text”: Informazioni dal profilo LinkedIn\n\t•\t“credly”, “coursera”, “edx”, “udemy”: Fonti verificate di certificazioni\n\t•\t“github”: Evidenze di utilizzo pratico della tecnologia\n\t•\t“public_ranking”: Validazione dell’istituzione tramite ranking\n\nLINEE GUIDA\n\t1.\tScrivi giustificazioni dettagliate e basate su evidenze in italiano\n\t2.\tIncludi 0-2 domande di chiarimento in italiano solo se le informazioni non sono chiare\n\t3.\tUsa fetchUrl solo per URL esplicitamente menzionati nei materiali del candidato\n\t4.\tConcentrati esclusivamente su education e learning: ignora altri aspetti del candidato\n\t5.\tLascia “section_score” a null: verrà calcolato automaticamente\n\t6.\tSii specifico riguardo alle evidenze che supportano ciascun punteggio\n\nInizia ora la tua valutazione, concentrandoti esclusivamente sugli aspetti di Education & Learning del profilo del candidato.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        1792,
+        -32
+      ],
+      "id": "0411d411-ca66-438d-8c77-9f520c673740",
+      "name": "Education & Learning"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"education_learning\": {\n    \"degree_fit\": { \n      \"score\": 5, \n      \"confidence\": \"High\", \n      \"justification\": \"BSc Computer Science aligns directly with backend engineer role; coursework in DBs and OS cited.\", \n      \"data_sources\": [\"cv\",\"linkedin_text\"]\n    },\n    \"college_signal\": { \n      \"score\": 4, \n      \"confidence\": \"High\", \n      \"justification\": \"University ranked in top public institutions; verified accreditation.\", \n      \"data_sources\": [\"public_ranking\"]\n    },\n    \"certificates\": { \n      \"score\": 4, \n      \"confidence\": \"High\", \n      \"justification\": \"4 Coursera certs (ML, Cloud, React) in 2023–24 verified via links.\", \n      \"data_sources\": [\"credly\",\"coursera\",\"linkedin_text\"]\n    },\n    \"stack_versatility\": { \n      \"score\": 5, \n      \"confidence\": \"Med\", \n      \"justification\": \"7+ stacks across mobile (Swift), backend (Node, Go), and ML (Python). Proven in repos.\", \n      \"data_sources\": [\"cv\",\"github\"]\n    },\n    \"section_score\": null,\n    \"questions\": [\n      \"Is your Cloud certificate AWS-specific or general architecture?\",\n      \"Did your degree include coursework in concurrency or distributed systems?\"\n    ],\n    \"notes\": [\"\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        1968,
+        176
+      ],
+      "id": "fecfdb52-d985-47da-8114-96b25520f1e4",
+      "name": "Education & Learner Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Sei un assistente AI specializzato nella valutazione delle competenze trasversali e comportamentali dei candidati. Il tuo unico obiettivo è analizzare esclusivamente la sezione \"Soft Skills & Behavioral\" del profilo di un candidato, concentrandoti al 100% su questa singola area di valutazione.\n\nEcco l'offerta di lavoro:\n<job_offer>\n{{ $('Organize data').item.json['Job Offer'].toJsonString() }}\n</job_offer>\n\nEcco il testo del CV:\n<cv_text>\n{{ $('Organize data').item.json.CV }}\n</cv_text>\n\nEcco il testo del profilo LinkedIn:\n<linkedin_text>\n{{ $('Organize data').item.json.Linkedin }}\n</linkedin_text>\n\nEcco la scala di valutazione:\n<scoring_scale>\n{{ $('Organize data').item.json['Job Offer'].scoring_scale }}\n</scoring_scale>\n\nEcco la rubrica di valutazione:\n<rubric>\n{{ $('Organize data').item.json['Job Offer'].rubric }}\n</rubric>\n\n## TOOLS\n- fetchUrl(url: string) → string\n  Recupera contenuti HTML/JSON da URL esplicitamente menzionati.\n\nLINEE GUIDA DETTAGLIATE PER LA VALUTAZIONE:\n\n1. COLLABORAZIONE\nObiettivo: misurare il tono cooperativo, l'interazione con i colleghi e la disponibilità ad aiutare.\nSegnali da cercare:\n- Commenti su pull request GitHub e risposte alle issue\n- Sentimento e costruttività del linguaggio (\"grazie\", \"ottima idea\", \"risolviamo insieme\")\n- Tempestività delle risposte e feedback reciproco\n\nScala di valutazione:\n- 1: Nessuna traccia collaborativa o tono negativo\n- 2: Interazioni rare o neutre, feedback minimo\n- 3: Occasionali contributi costruttivi o tono educato\n- 4: Collaborazione costante; presenza di mentoring o code review\n- 5: Leader proattivo della comunità; avvia discussioni e aiuta regolarmente gli altri\n\n2. COMUNICAZIONE\nObiettivo: valutare chiarezza e struttura dell'espressione tecnica.\nSegnali da cercare:\n- Leggibilità del testo del portfolio\n- Slide deck o video (struttura, chiarezza visiva)\n- README GitHub o documentazione progetti (organizzazione, completezza)\n\nScala di valutazione:\n- 1: Scrittura poco chiara o documentazione mancante\n- 2: Spiegazioni basilari, problemi grammaticali, formattazione scarsa\n- 3: Documentazione leggibile e strutturata\n- 4: Chiara, istruttiva e supportata visivamente (screenshot, esempi di codice)\n- 5: Chiarezza esemplare; tutorial, presentazioni pubbliche o contenuti educativi\n\n3. PRESENZA PROFESSIONALE\nObiettivo: valutare l'equilibrio tra credibilità professionale e rapporto segnale/rumore sulle piattaforme pubbliche.\nSegnali da cercare:\n- LinkedIn, Twitter, portfolio o blog\n- Focus su post tecnici, risultati, leadership di pensiero\n\nScala di valutazione:\n- 1: Nessuna presenza professionale o tono non professionale\n- 2: Contenuto scarso o misto; focus poco chiaro\n- 3: Post occasionali rilevanti o coinvolgimento con colleghi\n- 4: Aggiornamenti professionali regolari e condivisione di conoscenze\n- 5: Presenza da thought leader; influenza costante e costruttiva\n\n4. VALORI E AMBIZIONI\nObiettivo: comprendere i driver motivazionali, l'etica e la prospettiva a lungo termine del candidato.\nSegnali da cercare:\n- Dichiarazioni esplicite in post social o risposte chatbot\n- Menzioni di scopo, impatto o principi (sostenibilità, inclusività, open source)\n\nScala di valutazione:\n- 1: Nessun valore discernibile o motivazioni poco chiare\n- 2: Generici \"lavoratore instancabile/appassionato\" con poca profondità\n- 3: Valori concreti menzionati (impatto utente, innovazione)\n- 4: Scopo e direzione di carriera chiaramente articolati\n- 5: Forte bussola etica e obiettivi ambiziosi ma concreti allineati con la missione aziendale\n\n5. SOCIEVOLEZZA\nObiettivo: misurare l'energia sociale positiva e la socievolezza digitale senza pregiudizi.\nSegnali da cercare:\n- Presenza su Instagram, Twitter o YouTube\n- Coinvolgimento nei commenti (rapporto like/commenti), partecipazione alla comunità, tono amichevole\n\nScala di valutazione:\n- 1: Nessun segnale sociale o presenza online negativa\n- 2: Coinvolgimento minimo o irregolare\n- 3: Interazione occasionale e pubblico visibile\n- 4: Presenza comunitaria attiva, equilibrata e rispettosa\n- 5: Coinvolgimento ampio e autentico; accessibilità e positività visibili\n\nIMPORTANTE: Evita qualsiasi inferenza demografica o sull'aspetto. Concentrati rigorosamente sui modelli di interazione e sul tono.\n\nSTILE DELLE GIUSTIFICAZIONI:\nFornisci prove concise e basate sui comportamenti, ad esempio:\n\"Feedback educato e costruttivo su PR attraverso 6 repository; multiple discussioni di ringraziamento indicano attitudine collaborativa.\"\n\"Le pagine del portfolio utilizzano struttura chiara, diagrammi e demo video; il tono del README è istruttivo.\"\n\"Mantiene un feed Twitter focalizzato sullo sviluppo iOS e eventi della comunità.\"\n\nDOMANDE (massimo 0-2):\nEsempi di domande pertinenti:\n- \"Partecipi regolarmente a code review o programmi di mentorship?\"\n- \"Quale valore prioritizzi di più al lavoro: apprendimento, stabilità o impatto?\"\n- \"Mantieni qualche comunità di sviluppatori o gruppo aperto?\"\n\nNOTE:\nMemorizza conferme di follow-up da Q&A chatbot (valori, abitudini di team, preferenze di comunicazione).\n\nLOGICA DI CONFIDENZA:\n- High: Multiple fonti coerenti (GitHub + portfolio + social)\n- Med: Singola fonte con indicatori chiari\n- Low: Evidenze scarse, ambigue o non verificabili\n\nFONTI DATI:\n- \"github\": evidenze di collaborazione e tono\n- \"portfolio\", \"slideshare\", \"youtube\": comunicazione\n- \"linkedin_text\", \"twitter\", \"instagram\": presenza professionale e socievolezza\n- \"chatbot\": valori/ambizioni\n- \"cv\": contesto di base\n\nLascia sempre \"section_score\": null. Il sistema calcolerà automaticamente la media delle dimensioni numeriche.\n\nPrima di fornire la tua valutazione finale, analizza attentamente tutti i dati disponibili in un <scratchpad> per organizzare le tue osservazioni per ciascuna delle 5 dimensioni, poi fornisci il JSON richiesto.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2112,
+        -32
+      ],
+      "id": "6e28c336-1693-403c-824e-721cf5bcd119",
+      "name": "Soft Skills & Behavioral"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"soft_skills_behavioral\": {\n    \"collaboration\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"communication\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"professional_presence\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"values_ambitions\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"sociability\": { \"score\": 1, \"confidence\": \"Low|Med|High\", \"justification\": \"\", \"data_sources\": [\"cv\"] },\n    \"section_score\": null,\n    \"questions\": [\"\"],\n    \"notes\": [\"\"]\n  }\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2288,
+        176
+      ],
+      "id": "2728d396-29c5-47d4-a019-9f7e8c743c09",
+      "name": "Soft Skills & Behavioral Output Parser"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Ecco la versione completamente tradotta in italiano del prompt per la valutazione dei filtri di idoneità (eligibility filters) — mantiene la stessa logica e struttura, pronta per essere incollata nel tuo workflow AI 👇\n\n⸻\n\nPROMPT (versione italiana)\n\nValuti i filtri di idoneità per un candidato.\n\nINPUT\n\n<job_offer_eligibility_filters>\n  {{ $('Organize data').item.json['Job Offer'].eligibility_filters }}\n</job_offer_eligibility_filters>\n\n<cv_text>\n{{ $('Organize data').item.json.CV }}\n</cv_text>\n\n<linkedin_text>\n{{ $('Organize data').item.json.Linkedin }}\n</linkedin_text>\n\n⸻\n\nCOMPITO\n\nPer ogni regola presente in job_offer_eligibility_filters, decidi se il candidato soddisfa chiaramente il requisito basandoti solo sui testi forniti del CV e di LinkedIn.\n\t•\tImposta ok: true solo se ci sono prove esplicite e non ambigue nel CV o su LinkedIn.\n\t•\tSe le prove sono assenti, ambigue o contraddittorie, imposta ok: false.\n\t•\tNon cercare informazioni sul web, non dedurre nomi utente e non usare strumenti esterni.\n\t•\tSii prudente per età o permessi di lavoro: se non sono chiaramente indicati o deducibili, imposta ok: false.\n\t•\tTratta i requisiti di competenze come corrispondenze semantiche o per parola chiave (ad es. “SwiftUI” → ruoli o progetti che lo menzionano).\n\t•\tMantieni lo stesso ordine delle regole fornite in job_offer_eligibility_filters.\n\n⸻\n\nINDICAZIONI COMUNI PER L’INTERPRETAZIONE (solo per il tuo ragionamento, non nel risultato)\n\t•\t“Canada-based” / requisito geografico: cerca nel CV o in LinkedIn città, provincia o paese (es. “Toronto, ON, Canada”).\n\t•\t“21+” / età: vero solo se età o data di nascita sono esplicitamente menzionate (es. “nato nel 2003”); se non è chiaro → false.\n\t•\t“Autorizzato al lavoro” / “Work permit”: serve una frase esplicita (es. “Autorizzato a lavorare in Canada”); altrimenti false.\n\t•\t“Esperienza SwiftUI richiesta” (o simili): true se il CV/LinkedIn mostrano ruoli o progetti che lo utilizzano.\n\t•\t“Laurea richiesta”: conferma la presenza del titolo di studio e dell’area di competenza.\n\t•\t“Lingua: Inglese”: solo se dichiarata (certificati, livello linguistico) o fortemente implicita nel contesto lavorativo; se incerto → false.\n\n⸻\n\nFORMATO DI OUTPUT\n\nRestituisci solo il seguente oggetto JSON:\n\n{\n  \"eligibility_filters\": [\n    { \"rule\": \"<regola_1_esattamente_come_data>\", \"ok\": true_or_false },\n    { \"rule\": \"<regola_2_esattamente_come_data>\", \"ok\": true_or_false }\n  ]\n}\n\nNessun campo aggiuntivo, spiegazione o testo extra.",
+        "hasOutputParser": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.2,
+      "position": [
+        2464,
+        -32
+      ],
+      "id": "055e7d9b-d280-4b31-80a0-4264ea74eec8",
+      "name": "Eligibility"
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"eligibility_filters\": [\n    { \"rule\": \"Canada-based\", \"ok\": true },\n    { \"rule\": \"21+\", \"ok\": false },\n    { \"rule\": \"Esperienza SwiftUI richiesta\", \"ok\": true }\n  ]\n}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        2624,
+        176
+      ],
+      "id": "13e0dfd7-3c7e-4010-9a0e-4aa8df1b7504",
+      "name": "Eligibility Output Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "// ------- helpers -------\nfunction collectArray(sectionObj, key) {\n  const arr = Array.isArray((sectionObj || {})[key]) ? (sectionObj[key] || []) : [];\n  return arr.filter(x => x != null);\n}\n\n// ------- read sections -------\nconst pe = $(\"Professional Experience\").first().json.output.professional_experience || null;\nconst ts = $(\"Skills & Technical\").first().json.output.technical_skills || null;\nconst mo = $(\"Motivation\").first().json.output.motivation || null;\nconst ed = $(\"Education & Learning\").first().json.output.education_learning || null;\nconst ss = $(\"Soft Skills & Behavioral\").first().json.output.soft_skills_behavioral || null;\nconst el = $(\"Eligibility\").first().json.output.eligibility_filters || null;\n\n// Return normalized structure\nreturn [\n  {\n    json: {\n      professional_experience: pe,\n      technical_skills: ts,\n      motivation: mo,\n      education_learning: ed,\n      soft_skills_behavioral: ss,\n      eligibility_filters: el,\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        432
+      ],
+      "id": "574822a6-cb5a-429d-8761-a0a61df5c1ca",
+      "name": "Reading Sections",
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const sections = $(\"Reading Sections\").first().json;\nconst pe = sections.professional_experience;\nconst ts = sections.technical_skills;\nconst mo = sections.motivation;\nconst ed = sections.education_learning;\nconst ss = sections.soft_skills_behavioral;\nconst el = sections.eligibility_filters;\n\n// ------- merge all questions & notes -------\nconst questions = []\n  .concat(pe?.questions || [])\n  .concat(ts?.questions || [])\n  .concat(mo?.questions || [])\n  .concat(ed?.questions || [])\n  .concat(ss?.questions || []);\n\nconst notes = []\n  .concat(pe?.notes || [])\n  .concat(ts?.notes || [])\n  .concat(mo?.notes || [])\n  .concat(ed?.notes || [])\n  .concat(ss?.notes || []);\n\n// ------- read data -------\nconst organize = $(\"Organize data\").first().json; // works in Function node too\nconst jobOffer = $('Organize data').first().json['Job Offer'] || {};\n\nconst pillars = $(\"Compute Pillars\").first().json;\nconst pillar_scores = pillars.pillar_scores;\nconst confidence_overall = pillars.confidence_overall;\n\n// ------- weights from job offer (fallback to defaults) -------\nconst pillar_weights = jobOffer.weights || {\n  professional_experience: 0.30,\n  technical_skills: 0.35,\n  motivation: 0.15,\n  education_learning: 0.10,\n  soft_skills_behavioral: 0.10,\n};\n\n// ------- weighted total -------\nconst total_score = Number(\n  Object.keys(pillar_scores).reduce((acc, k) => {\n    const w = Number(pillar_weights[k] ?? 0);\n    const s = Number(pillar_scores[k] ?? 0);\n    return acc + w * s;\n  }, 0).toFixed(4)\n);\n\nfunction normalizeEligibility(input) {\n  if (!input) return [];\n\n  // unwrap common shape { el: [...] }\n  if (Array.isArray(input.el)) input = input.el;\n\n  // already an array?\n  if (Array.isArray(input)) {\n    return input\n      .map(x => x && typeof x === 'object' ? { rule: String(x.rule || '').trim(), ok: Boolean(x.ok) } : null)\n      .filter(x => x && x.rule.length);\n  }\n\n  // object with numeric keys { \"0\": {...}, \"1\": {...} }\n  if (typeof input === 'object') {\n    return Object.keys(input)\n      .sort((a,b) => Number(a) - Number(b))\n      .map(k => input[k])\n      .map(x => x && typeof x === 'object' ? { rule: String(x.rule || '').trim(), ok: Boolean(x.ok) } : null)\n      .filter(x => x && x.rule.length);\n  }\n\n  return [];\n}\n\nconst result = {\n  candidate_id: organize.Email || organize[\"Email\"] || null,\n  candidate_name: $(\"Organize data\").first().json.Name,\n  candidate_phone: $(\"Organize data\").first().json.Phone,\n  job_id: jobOffer.id || null,\n  run_id: `run_${Date.now()}`,\n  scoring_scale: jobOffer.scoring_scale || \"1–5\",\n  rubric: jobOffer.rubric || \"\",\n  timestamp_utc: new Date().toISOString(),\n\n  professional_experience: {...pe},\n  technical_skills: {...ts},\n  motivation: {...mo},\n  education_learning: {...ed},\n  soft_skills_behavioral: {...ss},\n  eligibility_filters: normalizeEligibility(el),\n\n  overall: {\n    pillar_weights,\n    pillar_scores,\n    total_score,\n    confidence_overall,\n    questions,\n    notes,\n  },\n};\n\n// ------- return cleaned JSON (fully serializable) -------\nreturn [{ json: JSON.parse(JSON.stringify(result)) }];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3360,
+        432
+      ],
+      "id": "4f7b482c-1d10-47d7-a0a4-c08da0c489da",
+      "name": "Final Result"
+    },
+    {
+      "parameters": {
+        "tableId": "evaluations",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        3536,
+        432
+      ],
+      "id": "659bbe48-d2cd-4d75-92fa-128461721720",
+      "name": "Add to Database",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qVSiIYxlMpNT0yyy",
+          "name": "Smartreq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ------- helpers -------\nconst CONF_MAP = { High: 1, Med: 0.5, Low: 0 };\n\nfunction confMeanToLabel(v) {\n  if (!isFinite(v)) return \"Low\";\n  if (v >= 0.75) return \"High\";\n  if (v >= 0.4) return \"Med\";\n  return \"Low\";\n}\n\nfunction sectionMean(sectionObj) {\n  if (!sectionObj || typeof sectionObj !== \"object\") return 0;\n  if (typeof sectionObj.section_score === \"number\") return sectionObj.section_score;\n\n  const scores = Object.values(sectionObj)\n    .filter((v) => v && typeof v === \"object\" && \"score\" in v)\n    .map((v) => Number(v.score))\n    .filter((n) => Number.isFinite(n));\n\n  if (!scores.length) return 0;\n  return scores.reduce((a, b) => a + b, 0) / scores.length;\n}\n\nfunction sectionConfidence(sectionObj) {\n  if (!sectionObj || typeof sectionObj !== \"object\") return null;\n  const vals = Object.values(sectionObj)\n    .filter((v) => v && typeof v === \"object\" && \"confidence\" in v)\n    .map((v) => CONF_MAP[v.confidence] ?? 0.5);\n\n  if (!vals.length) return null;\n  return vals.reduce((a, b) => a + b, 0) / vals.length;\n}\n\n// ------- read input from Step 1 -------\nconst input = $json;\n\nconst { professional_experience: pe, technical_skills: ts, motivation: mo, education_learning: ed, soft_skills_behavioral: ss } = input;\n\n// ------- compute pillar scores -------\nconst pillar_scores = {\n  professional_experience: sectionMean(pe),\n  technical_skills: sectionMean(ts),\n  motivation: sectionMean(mo),\n  education_learning: sectionMean(ed),\n  soft_skills_behavioral: sectionMean(ss),\n};\n\n// ------- overall confidence -------\nconst sectionConfs = [pe, ts, mo, ed, ss]\n  .map(sectionConfidence)\n  .filter((v) => typeof v === \"number\");\n\nconst confidence_overall = confMeanToLabel(\n  sectionConfs.length ? sectionConfs.reduce((a, b) => a + b, 0) / sectionConfs.length : 0\n);\n\nreturn [\n  {\n    json: {\n      pillar_scores,\n      confidence_overall,\n      sections: { pe, ts, mo, ed, ss },\n    },\n  },\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3184,
+        432
+      ],
+      "id": "d758f2f3-089a-4be6-91aa-b998dcb80e94",
+      "name": "Compute Pillars"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "claude-3-5-haiku-20241022",
+          "mode": "list",
+          "cachedResultName": "Claude Haiku 3.5"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatAnthropic",
+      "typeVersion": 1.3,
+      "position": [
+        1680,
+        -256
+      ],
+      "id": "72cbbb24-9f70-4b76-bfd0-4864cd5cf119",
+      "name": "Anthropic Chat Model",
+      "credentials": {
+        "anthropicApi": {
+          "id": "m4ahUKhnEJ1QjS8u",
+          "name": "Anthropic account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Organize data": {
+      "main": [
+        [
+          {
+            "node": "Professional Experience",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "Professional Experience",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Skills & Technical",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Motivation",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Education & Learning",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Soft Skills & Behavioral",
+            "type": "ai_memory",
+            "index": 0
+          },
+          {
+            "node": "Eligibility",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Organize data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Professional Experience": {
+      "main": [
+        [
+          {
+            "node": "Skills & Technical",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "fetchUrl": {
+      "ai_tool": [
+        [
+          {
+            "node": "Professional Experience",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Skills & Technical",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Motivation",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Education & Learning",
+            "type": "ai_tool",
+            "index": 0
+          },
+          {
+            "node": "Soft Skills & Behavioral",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skills & Technical": {
+      "main": [
+        [
+          {
+            "node": "Motivation",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Skills & Technical Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Skills & Technical",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivation Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Motivation",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Professional Experience Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Professional Experience",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Motivation": {
+      "main": [
+        [
+          {
+            "node": "Education & Learning",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Education & Learner Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Education & Learning",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Education & Learning": {
+      "main": [
+        [
+          {
+            "node": "Soft Skills & Behavioral",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soft Skills & Behavioral Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Soft Skills & Behavioral",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Soft Skills & Behavioral": {
+      "main": [
+        [
+          {
+            "node": "Eligibility",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligibility": {
+      "main": [
+        [
+          {
+            "node": "Reading Sections",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Eligibility Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Eligibility",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reading Sections": {
+      "main": [
+        [
+          {
+            "node": "Compute Pillars",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Final Result": {
+      "main": [
+        [
+          {
+            "node": "Add to Database",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Pillars": {
+      "main": [
+        [
+          {
+            "node": "Final Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Anthropic Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Professional Experience",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Skills & Technical",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Motivation",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Education & Learning",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Soft Skills & Behavioral",
+            "type": "ai_languageModel",
+            "index": 0
+          },
+          {
+            "node": "Eligibility",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b6b9bafd-5949-4805-a933-23549308b634",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2fdd3a3e73c7494341c761ed4bf34ce6b7c012384f067f9cf2366d863a3d6199"
+  },
+  "id": "9feEMKMG4m40ELR9",
+  "tags": []
+}

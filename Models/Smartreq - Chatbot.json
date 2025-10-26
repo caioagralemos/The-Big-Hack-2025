@@ -1,0 +1,535 @@
+{
+  "name": "Smartreq - Chatbot",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "chatbot-sinpete",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1904,
+        256
+      ],
+      "id": "24e78e78-5bac-4f80-bcf4-10e67557a656",
+      "name": "Chatbot",
+      "webhookId": "71dc2c44-305a-4290-924b-0c6f7db9e22a"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f1df07e4-65f1-4c44-9927-8927df647c19",
+              "name": "Name",
+              "value": "={{ $json.body.data.pushName }}",
+              "type": "string"
+            },
+            {
+              "id": "f12a2cab-52dd-401c-b793-65e587044641",
+              "name": "Phone",
+              "value": "={{ $json.body.data.key.remoteJid.split(\"@\")[0] }}",
+              "type": "string"
+            },
+            {
+              "id": "457aa7ff-699e-42fa-a63d-1b07cf080355",
+              "name": "Message",
+              "value": "={{ $json.body.data.message.conversation }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1696,
+        256
+      ],
+      "id": "507b9ac8-6dfc-4d57-b38d-8fe305907ceb",
+      "name": "Whatsapp"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $('Whatsapp').item.json.Message }}",
+        "options": {
+          "systemMessage": "=<system_prompt>\nSei Mia, l’assistente WhatsApp gentile, rapida e concreta di Smartreq. Aiuti i candidati a completare la valutazione per una specifica posizione: leggi le domande aperte, raccogli risposte brevi e salvo tutto nel profilo. Tono amichevole e pratico, messaggi brevi, uno per volta.\n\nSe l’utente arriva da link con job_id e telefono già noti, vai dritta alle domande aperte. Altrimenti proponi menu iniziale.\n\nSchema di apertura (varia leggermente):\n«Ciao! Sono Mia, assistente Smartreq 😊\nVuoi:\n1️⃣ Vedere le domande in sospeso\n2️⃣ Rispondere adesso\n3️⃣ Rivedere / modificare risposte\nScrivimi il numero o il nome dell’opzione.»\n\nRegole:\n• Focalizzati solo su questo iter: domande → risposte → salvataggio.\n• Domande da porre sempre chiare, in una riga, stile WhatsApp.\n• Accetta testo o link come risposta. Se la risposta è longa, chiedi un riassunto in una frase.\n• Conferma ogni salvataggio.\n• Se l’input è fuori contesto: «Ops, questo non c’entra con la tua valutazione 🙂 Dimmi se vuoi vedere le domande o rispondere adesso.»\n</system_prompt>\n\n<tools>\n  <get-questions>\n    <description>Recupera la riga di valutazione per un candidato e ruolo, per leggere le domande in sospeso.</description>\n    <parameters>\n      <job_id>stringa dell’offerta (es: ios_engineer_2025_09)</job_id>\n      <candidate_phone>stringa telefono internazionale (es: +390000000000)</candidate_phone>\n    </parameters>\n    <output>\n      Oggetto valutazione con almeno il campo overall (json).  \n      Usare overall.questions (array di stringhe) come domande aperte e overall.notes (array di stringhe) per risposte già raccolte.  \n      Se non presenti, trattare come [].\n    </output>\n  </get-questions>\n\n\n  <set-answers>\n    <description>Salva l’oggetto overall aggiornato (es. con note aggiunte o domande depennate) per un candidato e ruolo.</description>\n    <parameters>\n      <job_id>string</job_id>\n      <candidate_phone>string</candidate_phone>\n      <overall>json serializzato (string) contenente almeno { questions: [...], notes: [...], ... }</overall>\n    </parameters>\n    <output>\n      Conferma di aggiornamento della riga con l’overall nuovo.\n    </output>\n  </set-answers>\n</tools>\n\n\n<behavior>\n  <!-- 0. Identificazione e contesto -->\n  0. Se sono disponibili job_id e candidate_phone nel contesto/link, memorizzali come variabili di sessione. In caso contrario, chiedi gentilmente il numero di telefono con formato internazionale e il ruolo (o un link all’invito) prima di procedere.\n\n\n  <!-- 1. Vedere domande -->\n\n\n  <vedi-domande>\n    <steps>\n      1. Chiama SEMPRE <get-questions> con job_id e candidate_phone correnti.\n      2. Estrai overall.questions (array).  \n         - Se vuoto: «Al momento non ci sono domande da parte del team. Tutto a posto!»\n         - Se non vuoto: elenca numerate, 1 riga ciascuna:  \n           «Domande in sospeso:  \n            1️⃣ [testo domanda 1]  \n            2️⃣ [testo domanda 2] …»  \n      3. Chiedi: «Vuoi rispondere adesso? Scrivi il numero della domanda (es. 1) o “tutte”.»\n    </steps>\n  </vedi-domande>\n\n\n  <!-- 2. Rispondere -->\n\n\n  <rispondi>\n    <steps>\n      1. Se l’utente sceglie un numero N:\n         - Ripeti la domanda N in una riga.  \n           «Ok! Domanda [N]: [testo]. Rispondi in una frase (puoi includere un link se utile).»\n         - Quando ricevi la risposta, aggiungila a overall.notes come stringa «Q[N]: [risposta sintetica]».\n         - Rimuovi quella domanda da overall.questions.\n         - Chiama <set-answers> con l’overall aggiornato (mantieni anche gli altri campi pre-esistenti dell’overall se disponibili: pillar_scores, pillar_weights, ecc.).\n         - Conferma: «Ricevuto e salvato ✅ Vuoi rispondere a un’altra domanda? Scrivi un numero o “fine”.»\n      2. Se l’utente sceglie “tutte”:\n         - Invia le domande una per volta, aspettando risposta tra una e l’altra. Ogni volta ripeti i passi di salvataggio (aggiungi nota e rimuovi domanda), poi <set-answers>.\n      3. Se l’utente invia una risposta troppo lunga: chiedi un riassunto in una frase e salva quello.\n    </steps>\n  </rispondi>\n\n\n  <!-- 3. Rivedere / modificare -->\n\n\n  <rivedi-modifica>\n    <steps>\n      1. Chiama <get-questions>. Leggi overall.notes.\n      2. Se notes è vuoto: «Non ho ancora risposte salvate.» → proponi <vedi-domande>.\n      3. Altrimenti elenca sinteticamente le risposte numerate:  \n         «Risposte registrate:  \n          1️⃣ Q[ref] — [anteprima 8–10 parole]  \n          …  \n          Vuoi aggiornare una risposta? Dimmi il numero.»\n      4. Alla scelta, chiedi: «Ok, riscrivi la risposta in una frase.»\n      5. Sostituisci la voce corrispondente in overall.notes con il nuovo testo e chiama <set-answers>.\n      6. Conferma: «Aggiornato! Vuoi modificare altro o tornare alle domande?»\n    </steps>\n  </rivedi-modifica>\n\n\n  <!-- 4. Chiusura -->\n\n\n  <chiudi>\n    <steps>\n      1. Quando non restano domande (overall.questions vuoto):  \n         «Perfetto, ho tutto quello che serviva. Il team aggiornerà la tua valutazione. Grazie!»\n      2. Se l’utente scrive “fine” in qualsiasi momento:  \n         «Ok! Ho salvato quello che mi hai dato. Puoi tornare quando vuoi per completare.»\n    </steps>\n  </chiudi>\n\n\n  <!-- 5. Errori e fallback -->\n\n\n  <errori>\n    <rules>\n      - Se una tool call fallisce: «Hmm, sembra ci sia un problemino tecnico. Riprovo tra poco.» e ripeti una volta.  \n      - Se mancano job_id o telefono: «Mi indichi il tuo numero (con +39/ +XX) e il ruolo a cui stai candidando?»\n      - Se input fuori contesto: «Ops, questo non riguarda la tua valutazione. Vuoi vedere le domande o rispondere adesso?»\n    </rules>\n  </errori>\n</behavior>\n\n\n<note_su_dati_e_formato>\n• overall.questions è la fonte unica di verità per le domande da porre (0–8 max).\n• Salva ogni risposta come stringa breve in overall.notes, prefissata con un riferimento alla domanda (es. «Q2: …»).\n• Ogni aggiornamento va scritto tramite  passando l’oggetto overall completo aggiornato (non solo il campo modificato).\n• Mantieni i campi preesistenti in overall (pillar_scores, pillar_weights, total_score, ecc.) se già presenti nella riga.\n</note_su_dati_e_formato>"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 2.1,
+      "position": [
+        -992,
+        160
+      ],
+      "id": "3170d9fc-5e7a-4bd5-a31f-61c23d6e7cfb",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "value": "gpt-5-nano",
+          "mode": "list",
+          "cachedResultName": "gpt-5-nano"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        -992,
+        320
+      ],
+      "id": "750d3145-9751-4de6-8351-928b27744d55",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "qhROPs6ZwKuq3lEb",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Whatsapp').item.json.Telefone }}",
+        "tableName": "chatbot",
+        "contextWindowLength": 15
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryPostgresChat",
+      "typeVersion": 1.3,
+      "position": [
+        -880,
+        320
+      ],
+      "id": "9909b962-fc3b-497b-815f-7c1150ad2009",
+      "name": "Postgres Chat Memory",
+      "credentials": {
+        "postgres": {
+          "id": "0UlbqKi5A7q6WR4X",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        -272,
+        160
+      ],
+      "id": "e6edd722-f9c0-44cd-9156-644f3ca629cb",
+      "name": "Loop"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "evaluations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "candidate_phone",
+              "keyValue": "={{ $json.Phone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        -1488,
+        256
+      ],
+      "id": "ed2b309c-fdc9-4677-9741-80bf3175e929",
+      "name": "Check if user has any appliance",
+      "alwaysOutputData": true,
+      "credentials": {
+        "supabaseApi": {
+          "id": "qVSiIYxlMpNT0yyy",
+          "name": "Smartreq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "63c7e6ea-19e7-4389-bb41-073d8d3c63cd",
+              "leftValue": "={{ $json }}",
+              "rightValue": "",
+              "operator": {
+                "type": "object",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1264,
+        256
+      ],
+      "id": "297fb270-e418-48d4-a2e9-2cf8a92606aa",
+      "name": "If so"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.caioagralemos.space/message/sendText/automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"text\": \"Benvenuto su Smartreq.\\n\\nPurtroppo non siamo riusciti a trovare il tuo numero nel nostro database.\",\n  \"number\": \"{{ $('Whatsapp').item.json.Phone }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1008,
+        512
+      ],
+      "id": "8e9b0d3d-d549-4248-9e45-e7069a7fd390",
+      "name": "Message - Unregistered"
+    },
+    {
+      "parameters": {
+        "jsCode": "const raw = items[0].json.output; // ou de onde vier o texto\nif (typeof raw !== 'string') throw new Error(\"Esperava string\");\n\nconst parts = raw\n  .split(/\\r?\\n/)\n  .map(s => s.trim())\n  .filter(s => s !== \"\");\n\nreturn parts.map(p => ({ json: { text: p, numero: items[0].json.numero } }));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -576,
+        160
+      ],
+      "id": "0105a101-18ad-41d3-8a6f-06917672457e",
+      "name": "Separate messages"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://chat.caioagralemos.space/message/sendText/automacao",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n    \"text\": \"{{$json.text.replaceAll('\"', \"*\") }}\",\n  \"number\": \"{{ $('Whatsapp').item.json.Phone }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        0,
+        176
+      ],
+      "id": "5989115a-dcfe-44dc-9a07-3f25ab683463",
+      "name": "Message - Chatbot Answers"
+    },
+    {
+      "parameters": {
+        "amount": 2
+      },
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        208,
+        192
+      ],
+      "id": "b5f5e9d4-9cf2-4ab2-bfb0-1ae1d7d940e5",
+      "name": "Wait 2 seconds",
+      "webhookId": "1fc178e9-0d9f-4d9e-91bc-72e8716dfc92"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "bf91ea31-1ecc-4478-b6b2-dcf5ab3e6a96",
+      "name": "End of loop"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "tableId": "evaluations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "candidate_phone",
+              "keyValue": "={{ $('Whatsapp').item.json.Phone }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        384
+      ],
+      "id": "2255de84-9eec-4ea1-8418-c9f0d37f7ba5",
+      "name": "get-questions",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qVSiIYxlMpNT0yyy",
+          "name": "Smartreq"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "tableId": "evaluations",
+        "filters": {
+          "conditions": [
+            {
+              "keyName": "job_id",
+              "condition": "eq",
+              "keyValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('conditions0_Field_Value', ``, 'string') }}"
+            },
+            {
+              "keyName": "candidate_phone",
+              "condition": "eq",
+              "keyValue": "={{$('Whatsapp').item.json.Phone}}"
+            }
+          ]
+        },
+        "fieldsUi": {
+          "fieldValues": [
+            {
+              "fieldId": "overall",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues0_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "professional_experience",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues1_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "technical_skills",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues2_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "motivation",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues3_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "education_learning",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues4_Field_Value', ``, 'string') }}"
+            },
+            {
+              "fieldId": "soft_skills_behavioral",
+              "fieldValue": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('fieldValues5_Field_Value', ``, 'string') }}"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.supabaseTool",
+      "typeVersion": 1,
+      "position": [
+        -800,
+        416
+      ],
+      "id": "223f95bf-c79e-4d19-9b36-ce8543feb872",
+      "name": "set-answers",
+      "credentials": {
+        "supabaseApi": {
+          "id": "qVSiIYxlMpNT0yyy",
+          "name": "Smartreq"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Chatbot": {
+      "main": [
+        [
+          {
+            "node": "Whatsapp",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Whatsapp": {
+      "main": [
+        [
+          {
+            "node": "Check if user has any appliance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Separate messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres Chat Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop": {
+      "main": [
+        [
+          {
+            "node": "End of loop",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message - Chatbot Answers",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if user has any appliance": {
+      "main": [
+        [
+          {
+            "node": "If so",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If so": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Message - Unregistered",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Separate messages": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Message - Chatbot Answers": {
+      "main": [
+        [
+          {
+            "node": "Wait 2 seconds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 2 seconds": {
+      "main": [
+        [
+          {
+            "node": "Loop",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "get-questions": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "set-answers": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dd588e26-103d-4894-9970-8ff4b9c1c211",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "2fdd3a3e73c7494341c761ed4bf34ce6b7c012384f067f9cf2366d863a3d6199"
+  },
+  "id": "8AAzgrIXZ5qPZQnl",
+  "tags": []
+}
