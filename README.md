@@ -1,264 +1,260 @@
-# 🤖 SmartReq - Sistema di Valutazione Intelligente dei Candidati
+# 🤖 SmartReq – Intelligent Candidate Evaluation System
 
-SmartReq è una piattaforma innovativa che utilizza l'intelligenza artificiale per rivoluzionare il processo di recruiting, combinando analisi automatizzata dei CV con conversazioni intelligenti su WhatsApp per una valutazione completa e trasparente dei candidati.
+SmartReq is an AI-powered platform that transforms the recruiting process by combining automated CV analysis, multi-source evaluation, and natural WhatsApp conversations to build a complete and transparent candidate profile.
 
-## 📋 Panoramica del Progetto
+---
 
-SmartReq trasforma il recruiting tradizionale attraverso:
+## 📋 Project Overview
 
-- **5 Robot Specializzati**: Ogni dimensione della valutazione è gestita da un AI agent specifico
-- **Analisi Multi-Fonte**: CV, LinkedIn, GitHub, portfolio e certificazioni
-- **Conversazioni Intelligenti**: Chatbot WhatsApp che completa le informazioni mancanti
-- **Dashboard Analytics**: Visualizzazione avanzata dei dati e comparazioni
-- **Processo Automatizzato**: Dal caricamento CV alla valutazione finale
+SmartReq improves traditional recruiting through:
 
-## 🏗️ Struttura del Progetto
+* **5 Specialized AI Agents**, each evaluating a specific competency dimension
+* **Multi-Source Analysis**: CV, LinkedIn, GitHub, portfolio, certifications
+* **Smart WhatsApp Conversations**: A chatbot that fills missing data naturally
+* **Advanced Analytics Dashboard**: KPIs, comparison views, radar charts
+* **Full Automation**: From CV upload to final evaluation
+
+---
+
+## 🏗️ Project Structure
 
 ```
 📁 The Big Hack 2025/
-├── 📁 Data Structures/          # Schemi database e modelli dati
-│   ├── evaluation.sql           # Schema tabella valutazioni
-│   ├── evaluation.ts           # Tipo TypeScript per valutazioni
-│   ├── job_offer.sql           # Schema tabella offerte lavoro
-│   └── job_offer.ts            # Tipo TypeScript per offerte
-├── 📁 Integration/             # Documentazione API e integrazioni
-│   ├── api documentation.md    # Documentazione API SmartReq
-│   └── supabase.txt           # Credenziali database Supabase
-├── 📁 Models/                  # Workflow n8n e automazioni
-│   ├── Smartreq - Chatbot.json    # Workflow chatbot WhatsApp
-│   └── Smartreq - Evaluation.json # Workflow valutazione AI
-├── 📁 Presentation/            # Materiali di presentazione
-│   ├── Presentation.key        # Slides di presentazione
-│   └── script.txt             # Script di presentazione
-├── 📁 Prompts/                 # Prompt per i modelli AI
-├── 📁 Resources/               # Documentazione e risorse
-│   ├── detailed_model.txt      # Modello dettagliato del sistema
-│   ├── userflow.txt           # Flusso utente del sistema
-│   └── whatsapp.txt           # Configurazione WhatsApp
-└── 📁 Webapp/                  # Applicazione web React
-    ├── public/                 # File statici
-    ├── src/                   # Codice sorgente
-    │   ├── components/        # Componenti React
-    │   ├── contexts/         # Context providers
-    │   ├── types/            # Definizioni TypeScript
-    │   └── utils/            # Utility e API clients
-    └── build/                 # Build di produzione
+├── 📁 Data Structures/       
+│   ├── evaluation.sql
+│   ├── evaluation.ts
+│   ├── job_offer.sql
+│   └── job_offer.ts
+├── 📁 Integration/
+│   ├── api documentation.md
+│   └── supabase.txt
+├── 📁 Models/
+│   ├── Smartreq - Chatbot.json
+│   └── Smartreq - Evaluation.json
+├── 📁 Presentation/
+│   ├── Presentation.key
+│   └── script.txt
+├── 📁 Prompts/
+├── 📁 Resources/
+│   ├── detailed_model.txt
+│   ├── userflow.txt
+│   └── whatsapp.txt
+└── 📁 Webapp/
+    ├── public/
+    ├── src/
+    │   ├── components/
+    │   ├── contexts/
+    │   ├── types/
+    │   └── utils/
+    └── build/
 ```
 
-## 🎯 Funzionalità Principali
+---
 
-### 🤖 I Cinque Robot Specializzati
+## 🎯 Core Features
 
-1. **Pro** - Esperto di Esperienza Professionale
-   - Valuta rilevanza e impatto dell'esperienza lavorativa
-   - Analizza progressione di carriera e responsabilità
+### 🤖 The Five AI Agents
 
-2. **Tech** - Ingegnere Tecnico
-   - Misura profondità delle competenze tecniche
-   - Valuta qualità del codice e progetti GitHub
+1. **Pro** – Professional Experience Analyst
+   Evaluates relevance, impact, and career progression.
 
-3. **Moty** - Motivatore
-   - Osserva passione e costanza nei progetti
-   - Analizza commitment e dedizione
+2. **Tech** – Technical Engineer
+   Measures technical depth, code quality, and GitHub project strength.
 
-4. **Edu** - Mentore Educativo
-   - Analizza formazione e certificazioni
-   - Valuta capacità di apprendimento continuo
+3. **Moty** – Motivation & Drive Analyst
+   Detects passion, consistency, side projects, and long-term commitment.
 
-5. **Softy** - Empatico delle Soft Skills
-   - Valuta collaborazione e comunicazione
-   - Analizza valori personali e fit culturale
+4. **Edu** – Education & Learning Mentor
+   Assesses academic background, certifications, and continuous learning.
 
-### 💬 Agente Conversazionale WhatsApp
+5. **Softy** – Soft Skills & Culture Fit Evaluator
+   Analyzes communication, collaboration, values, and cultural alignment.
 
-**Mia** - L'assistente AI che:
-- Contatta automaticamente i candidati per informazioni mancanti
-- Conduce conversazioni naturali e fluide
-- Aggiorna in tempo reale le valutazioni
-- Mantiene il contatto umano nel processo digitale
+---
 
-### 📊 Dashboard Analytics
+### 💬 WhatsApp Conversational Agent
 
-- **Vista Candidati**: Panoramica completa di tutti i candidati
-- **Gestione Ruoli**: Creazione e modifica delle posizioni aperte
-- **KPI e Metriche**: Statistiche avanzate sui processi di recruiting
-- **Confronti**: Comparazione visuale tra candidati
-- **Radar Chart**: Visualizzazione delle dimensioni di valutazione
+**Mia**, the AI assistant, automatically contacts candidates to:
 
-## 🚀 Installazione e Setup
+* Request missing information
+* Conduct natural, human-like conversations
+* Update evaluations in real time
+* Maintain a human-centered digital process
 
-### Prerequisiti
+---
 
-- Node.js (versione 18 o superiore)
-- npm o yarn
-- Account Supabase
-- Accesso alle API SmartReq
+### 📊 Analytics Dashboard
 
-### 1. Clona il Repository
+* **Candidate Overview**
+* **Role Management**
+* **KPI Metrics and Charts**
+* **Side-by-Side Candidate Comparison**
+* **Radar Chart for Evaluation Dimensions**
+
+---
+
+## 🚀 Installation & Setup
+
+### Requirements
+
+* Node.js 18+
+* npm or yarn
+* Supabase project
+* SmartReq API access
+
+### 1. Clone the Repository
 
 ```bash
-git clone [url-repository]
+git clone [repository-url]
 cd "The Big Hack 2025"
 ```
 
-### 2. Installazione Dipendenze
+### 2. Install Dependencies
 
 ```bash
 cd Webapp
 npm install
 ```
 
-### 3. Configurazione Variabili d'Ambiente
+### 3. Environment Variables
 
-Crea un file `.env` nella cartella `Webapp` con le seguenti variabili:
+Create a `.env` file inside `Webapp/`:
 
 ```env
-# Supabase Configuration
+# Supabase
 VITE_SUPABASE_URL=https://evsymppxmhfvfgmkviij.supabase.co
 VITE_SUPABASE_ANON_KEY=your_supabase_anon_key
-VITE_SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImV2c3ltcHB4bWhmdmZnbWt2aWlqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTM4NDU0OSwiZXhwIjoyMDc2OTYwNTQ5fQ.NIsjmggybDcuZvZSSqvt7tIloC4gxdeTr3FPCwNoxII
+VITE_SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
 
 # SmartReq API
 VITE_SMARTREQ_API_URL=https://primary-production-6beb.up.railway.app
 
-# WhatsApp Integration (opzionale)
-VITE_WHATSAPP_WEBHOOK_URL=your_whatsapp_webhook_url
+# WhatsApp Integration (optional)
+VITE_WHATSAPP_WEBHOOK_URL=your_webhook_url
 
-# Other Configuration
+# App Config
 VITE_APP_NAME=SmartReq
 VITE_COMPANY_ID=your_company_id
 ```
 
-### 4. Setup Database
+### 4. Database Setup
 
-Le strutture del database sono disponibili in `Data Structures/`:
+Execute the SQL files in `Data Structures/` inside Supabase:
 
-```bash
-# Esegui gli script SQL su Supabase
-# 1. evaluation.sql - Crea tabella valutazioni
-# 2. job_offer.sql - Crea tabella offerte lavoro
-```
+* `evaluation.sql`
+* `job_offer.sql`
 
-### 5. Avvio dell'Applicazione
+### 5. Run the App
 
 ```bash
-# Modalità sviluppo
 npm run dev
-
-# Build per produzione
+# or
 npm run build
 ```
 
-L'applicazione sarà disponibile su `http://localhost:5173`
-
-## 🔧 Configurazione Avanzata
-
-### Integrazione n8n
-
-I workflow n8n sono disponibili in `Models/`:
-
-1. **Smartreq - Chatbot.json**: Gestisce le conversazioni WhatsApp
-2. **Smartreq - Evaluation.json**: Orchestrazione del processo di valutazione
-
-Importa questi file nella tua istanza n8n per abilitare l'automazione completa.
-
-### API SmartReq
-
-Consulta `Integration/api documentation.md` per:
-- Endpoint disponibili
-- Schema delle richieste
-- Esempi di codice
-- Gestione degli errori
-
-## 📱 Utilizzo del Sistema
-
-### Per le Aziende
-
-1. **Creazione Ruolo**: Definisci posizione, competenze e pesi delle dimensioni
-2. **Generazione Link**: Ottieni link sicuro per i candidati
-3. **Monitoraggio**: Visualizza candidature e valutazioni in tempo reale
-4. **Analisi**: Confronta candidati e prendi decisioni informate
-
-### Per i Candidati
-
-1. **Accesso tramite Link**: Clicca sul link ricevuto dall'azienda
-2. **Caricamento Documenti**: Invia CV, LinkedIn, portfolio
-3. **Conversazione WhatsApp**: Completa informazioni se richiesto
-4. **Risultati**: Ricevi feedback trasparente sulla valutazione
-
-## 🔄 User Flow Completo
-
-```
-Company Dashboard → Create New Role
-       ↓
-Fill Role Info + Core Skills + Dimension Weight
-       ↓
-Generate Secure Candidate Link
-       ↓
-Candidate Clicks Link → Views Role Description
-       ↓
-Candidate Fills Form (CV + Links)
-       ↓
-AI Extracts & Evaluates → Detects Missing Data
-       ↓
-WhatsApp AI Chat Fills Gaps
-       ↓
-Complete Candidate Profile → Stored in Company Dashboard
-       ↓
-Company Views Analytics & Comparisons
-```
-
-## 🛠️ Tecnologie Utilizzate
-
-### Frontend
-- **React 18** - Framework UI
-- **TypeScript** - Type safety
-- **Vite** - Build tool e dev server
-- **Tailwind CSS** - Styling
-- **Radix UI** - Componenti accessibili
-- **Recharts** - Visualizzazione dati
-- **React Hook Form** - Gestione form
-
-### Backend & Infrastruttura
-- **Supabase** - Database e autenticazione
-- **n8n** - Automazione workflow
-- **Railway** - Hosting API
-- **WhatsApp Business API** - Messaggistica
-
-### AI & ML
-- **SmartReq AI Pipeline** - Valutazione candidati
-- **Natural Language Processing** - Analisi CV e conversazioni
-- **Multi-Agent System** - 5 robot specializzati
-
-## 📚 Documentazione Aggiuntiva
-
-- `Webapp/src/docs/` - Documentazione tecnica completa
-- `Resources/detailed_model.txt` - Modello di sistema dettagliato
-- `Integration/api documentation.md` - Documentazione API
-- `Presentation/script.txt` - Script di presentazione del progetto
-
-## 🤝 Contribuzioni
-
-Questo progetto è stato sviluppato per **The Big Hack 2025**. Per contribuire:
-
-1. Fork del repository
-2. Crea un branch per le tue modifiche
-3. Commit delle modifiche con messaggi descrittivi
-4. Push del branch
-5. Apri una Pull Request
-
-## 📞 Supporto
-
-Per supporto tecnico o domande sul progetto:
-
-- Consulta la documentazione in `Webapp/src/docs/`
-- Verifica i file di troubleshooting
-- Controlla le configurazioni in `Integration/`
-
-## 📄 Licenza
-
-Progetto sviluppato per The Big Hack 2025. Tutti i diritti riservati.
+App available at:
+`http://localhost:5173`
 
 ---
 
-**SmartReq** - Rivoluzionando il recruiting con l'intelligenza artificiale 🚀
+## 🔧 Advanced Configuration
+
+### n8n Integration
+
+Workflows are located in `Models/`:
+
+* **Smartreq - Chatbot.json** → WhatsApp automation
+* **Smartreq - Evaluation.json** → AI evaluation pipeline
+
+Import them into your n8n instance to enable full automation.
+
+### SmartReq API Docs
+
+See `Integration/api documentation.md` for:
+
+* Endpoints
+* Request/response schemas
+* Examples
+* Error handling
+
+---
+
+## 📱 How the System Works
+
+### For Companies
+
+1. Create a new job role
+2. Define skills, weights, and requirements
+3. Generate a secure candidate link
+4. Track applications in real time
+5. Compare, evaluate, decide
+
+### For Candidates
+
+1. Access the secure link
+2. Upload CV and links (LinkedIn, GitHub, portfolio)
+3. Complete missing info via WhatsApp
+4. Receive a transparent evaluation summary
+
+---
+
+## 🔄 User Flow
+
+```
+Company Dashboard → Create Role
+       ↓
+Define Skills & Weights
+       ↓
+Generate Secure Link
+       ↓
+Candidate Submits CV & Links
+       ↓
+AI Extracts Data → Detects Missing Info
+       ↓
+WhatsApp Agent Fills the Gaps
+       ↓
+Complete AI Evaluation
+       ↓
+Dashboard Analytics & Comparison
+```
+
+---
+
+## 🛠️ Technologies
+
+**Frontend:**
+React 18 · TypeScript · Vite · Tailwind · Radix UI · Recharts · React Hook Form
+
+**Backend & Infra:**
+Supabase · n8n · Railway · WhatsApp Business API
+
+**AI:**
+Multi-agent evaluation system · NLP for CV and conversations
+
+---
+
+## 📚 Additional Documentation
+
+* `Resources/detailed_model.txt` – System architecture
+* `Resources/userflow.txt` – User journey
+* `Resources/whatsapp.txt` – WhatsApp setup
+* `Presentation/script.txt` – Pitch script
+
+---
+
+## 🤝 Contributing
+
+1. Fork
+2. Create a new branch
+3. Commit with clear messages
+4. Open a Pull Request
+
+---
+
+## 📞 Support
+
+For support:
+
+* Check `/Webapp/src/docs/`
+* Review integration files
+* Validate environment configuration
